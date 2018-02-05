@@ -1,0 +1,555 @@
+for(i in c("shinydashboard","shiny","leaflet","ggplot2","devtools","shinythemes","fmsb","plotly","dplyr","DBI","httr","DT","shinycssloaders",
+           "canvasXpress","radarchart")){
+  library(i, character.only = T)
+} 
+library(MVN)
+library(shinyBS)
+library(shinyjs)
+test1 = "일반통계 분석모듈"
+test2 = "기초통계, 연관관계, 차이, 인과관계 분석을 위한 곳입니다."
+test3 = "현재는 데이터 업로드, 빈도분석, 기술통계분석 구조방정식모델(SEM)분석만 가능하지만 점차 업데이트 예정입니다."
+test4 = "이곳은 체계도이고 실제 분석은 왼쪽메뉴를 선택해서 진행하세요."
+#dd = HTML(paste0(test1,tags$br(),test2,tags$br(),test3)
+
+
+source("chooser.R")
+options(shiny.sanitize.errors = TRUE)
+#===== use insertUI(), removeUI()
+shinyUI(dashboardPage(skin="blue",
+                      dashboardHeader(title = "일반통계 분석모듈",
+                                      titleWidth = 1500),
+                      dashboardSidebar(useShinyjs(),
+                                       collapsed = F,
+                                       width = 250,
+                                       sidebarMenu(id = "sidebar",
+                                                   br(),
+                                                   #hidden(tags$div(class="header", id="haha", menuItem("", tabName = "home", icon = icon("home")))),
+                                                   menuItem("",
+                                                            tabName = 'home',
+                                                            icon = icon('home')
+                                                   ),
+                                                   menuItem('데이터 업로드 및 저장', 
+                                                            tabName = 'dtupload',
+                                                            icon = icon('bar-chart')
+                                                   ),
+                                                   menuItem('빈도분석', 
+                                                            tabName = 'frequency',
+                                                            icon = icon('bar-chart')
+                                                   ),
+                                                   menuItem('기술통계분석', 
+                                                            tabName = 'description',
+                                                            icon = icon('bar-chart')
+                                                   ),
+                                                   menuItem('연관관계분석', 
+                                                            icon = icon('bar-chart'),
+                                                            hr(),
+                                                            menuItem('교차분석',
+                                                                     tabName = 'cross',
+                                                                     icon = icon('signal')),
+                                                            hr(),
+                                                            menuItem('상관분석',
+                                                                     tabName = 'correlation',
+                                                                     icon = icon('male')),
+                                                            hr()
+                                                            
+                                                   ),
+                                                   menuItem('차이분석', 
+                                                            icon = icon('map'),
+                                                            hr(),
+                                                            menuItem('독립표본 t-test분석',
+                                                                     tabName = 'ttest',
+                                                                     icon = icon('thumbs-up')),
+                                                            hr(),
+                                                            menuItem(HTML(paste0("일원배치분산",
+                                                                                 tags$br(),
+                                                                                 "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(ANOVA)분석")),
+                                                                     tabName = 'anova',
+                                                                     icon = icon('thumbs-down')),
+                                                            hr()
+                                                   ),
+                                                   menuItem('인과관계분석', 
+                                                            icon = icon('map'),
+                                                            hr(),
+                                                            menuItem('회귀분석',
+                                                                     tabName = 'regression',
+                                                                     icon = icon('thumbs-up')),
+                                                            hr(),
+                                                            menuItem(HTML(paste0("구조방정식",
+                                                                                 tags$br(),
+                                                                                 "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;모델(SEM)분석")),
+                                                                     
+                                                                     icon = icon('thumbs-down'),
+                                                                     menuItem('구조방정식 분석 절차', 
+                                                                              tabName = 'structural',
+                                                                              icon = icon('bar-chart')
+                                                                     ),
+                                                                     menuItem('다변량 정규성 검증', 
+                                                                              tabName = 'choo',
+                                                                              icon = icon('bar-chart')
+                                                                     ),
+                                                                     menuItem('구조방정식 모델', 
+                                                                              tabName = 'editequation',
+                                                                              icon = icon('bar-chart')
+                                                                     )
+                                                                     
+                                                            ),
+                                                            hr()
+                                                   )
+                                                   
+                                                   
+                                       )
+                      ),
+                      dashboardBody(tags$head(tags$script(src = "message-handler.js")),
+                                    tags$style(HTML(".sidebar-menu li a { padding : 18px 5px;}
+                                                    .box-solid { display:table;}
+                                                    .box-body { display:table-cell; vertical-align: middle; text-align: center;}
+                                                    .skin-red .main-header .logo { font-weight:bold;}
+                                                    #list { text-align: left;}
+                                                    ")),
+                                    
+                                    tabItems(
+                                      tabItem(tabName = "home",
+                                              
+                                              fluidRow(
+                                                column(12,
+                                                       box(width = "100%", height = "75px", background = "navy", align="center",
+                                                           h2("일반통계 분석모듈"),
+                                                           h4("기초통계, 연관관계, 차이, 인과관계 분석을 위한 곳입니다."),
+                                                           h4("현재는 데이터 업로드, 빈도분석, 기술통계분석 구조방정식모델(SEM)분석만 가능하지만 점차 업데이트 예정입니다."),
+                                                           h4("이곳은 체계도이고 실제분석은 왼쪽메뉴를 선택해서 진행하세요.")
+                                                       )
+                                                ),
+                                                column(2,
+                                                       box(width = "100%", height = "35px", background = "navy", align="center",
+                                                           "데이터 업로드 및 저장"),
+                                                       box(width = "100%", height = "78px", background = "navy", align="center",
+                                                           "빈도 분석"),
+                                                       box(width = "100%", height = "35px", background = "navy", align="center",
+                                                           "기술 통계 분석"),
+                                                       column(5, style='padding:0px;',
+                                                              box(width = "100%", height = "100px", background = "navy", align="center",
+                                                                  "연관 관계 분석"),
+                                                              box(width = "100%", height = "178px", background = "navy", align="center",
+                                                                  "차이 분석"),
+                                                              box(width = "100%", height = "137px", background = "navy", align="center",
+                                                                  "인과 관계 분석")),
+                                                       column(7,
+                                                              box(width = "100%", height = "35px", background = "navy", align="center",
+                                                                  "교차 분석"),
+                                                              box(width = "100%", height = "35px", background = "navy", align="center",
+                                                                  "상관 분석"),
+                                                              box(width = "100%", height = "78px", background = "navy", align="center",
+                                                                  "독립표본 t-test 분석"),
+                                                              box(width = "100%", height = "80px", background = "navy", align="center",
+                                                                  "일원배치분산 분석(ANOVA)"),
+                                                              box(width = "100%", height = "35px", background = "navy", align="center",
+                                                                  "회귀 분석"),
+                                                              box(width = "100%", height = "78px", background = "navy", align="center",
+                                                                  "구조방정식모델"))
+                                                ),
+                                                br(),
+                                                br(),
+                                                column(6,
+                                                       box(width = "100%", height = "35px", background = "blue",
+                                                           "통계분석을 실시할 수 있도록 데이터를 분석모듈에 업로드 및 저장"),
+                                                       box(width = "100%", height = "78px", background = "blue",
+                                                           h5("질적변수(명목, 서열변수)에 대해 빈도분석 실시"),
+                                                           h6("빈도 : 하나의 질적변수내에서 각각의 보기가 자주 나타난 정도를 의미")),
+                                                       box(width = "100%", height = "35px", background = "blue",
+                                                           "양적변수(등간, 연속변수)에 대해 기술통계치(합계, 평균 등) 도출"),
+                                                       box(width = "100%", height = "35px", background = "blue",
+                                                           "질적변수(명목, 서열변수)간 연관관계 분석"),
+                                                       box(width = "100%", height = "35px", background = "blue",
+                                                           "양적변수(등간, 연속변수)간 연관관계 분석"),
+                                                       box(width = "100%", height = "78px", background = "blue",
+                                                           h5("질적변수에 따른 양적변수 차이 분석"),
+                                                           h6("질적변수의 선택보기 2개인 경우, 예) 남자&여자")),
+                                                       box(width = "100%", height = "80px", background = "blue",
+                                                           h5("질적변수에 따른 양적변수 차이 분석"),
+                                                           h6("질적변수의 선택보기 3개 이상인 경우, 예) 서울&수도권&지방")),
+                                                       box(width = "100%", height = "35px", background = "blue",
+                                                           "양적변수 간 단순한 인과관계 분석"),
+                                                       box(width = "100%", height = "78px", background = "blue",
+                                                           h5("양적변수 간 복잡한 인과관계 분석"),
+                                                           h6("복잡한 인과관계 : 회귀분석과 비교해 볼 때 종속변수가 여러 개이거나 여러 단계의 인과관계를 동시에 분석해야 하는 경우"))
+                                                ),
+                                                column(4,
+                                                       box(width = "100%", height = "674px", background = "light-blue",
+                                                           h3("분석기법 선택 시 참고사항"),
+                                                           br(),
+                                                           h5("- 변수: 분석대상이 되는 관심대상. 설문지의 경우 하나하나의 질문항목들을 의미함."),
+                                                           br(),
+                                                           h5("- 명목변수: 구분만 가능한 변수"),
+                                                           h5("예) 당신의 성별은? 남자/여자"),
+                                                           br(),
+                                                           h5(" 서열변수: 순위구분이 가능한 변수"),
+                                                           h5("예) 당신의 교육수준은? 초졸/중졸/고졸이상"),
+                                                           br(),
+                                                           h5("- 등간변수: 보기간 간격이 동일하여 변수간 더하기 빼기 가능"),
+                                                           h5("예) 레스토랑 이용만족도는 어떠한가요? 전혀 그렇지 않다/보통이다/매우 그렇다"),
+                                                           br(),
+                                                           h5("- 연속변수: 완전히 숫자로 취급이 가능하여 사칙연산이 가능"),
+                                                           h5("예) 당신의 소득은? _____ 만원"))),
+                                                column(12,
+                                                       actionButton("close", "초기화면으로 이동", onclick ="location.href='http://ksdsi.co.kr';", width="100%",
+                                                                    style = "background-color: #D81B60; color: white;"))
+                                              )
+                                              
+                                      ),
+                                      tabItem(tabName = "dtupload",
+                                              box(width = "100%", height = "80px", background = "navy", 
+                                                  h5("분석하고자 하는 자료를 업로드 하세요. 현재 지원가능 파일 형식은 csv, xlsx입니다."),
+                                                  h5("다른 형식의 파일은 csv나 xlsx형식으로 바꾸어 업로드해주세요."),
+                                                  br(),
+                                                  h5("또한 추후 분석 시 결측치(빈칸)가 존재하면 분석 중 에러가 발생할 수 있으니 결측치는 자동으로 삭제되어 업로드 되니 참고하시기 바랍니다.")),
+                                              # Input: Select a file ----
+                                              fileInput("file", label = "파일 업로드(csv, xlsx, RDS)"),
+                                              # Horizontal line ----
+                                              tags$hr(),
+                                              
+                                              # Input: Checkbox if file has header ----
+                                              #checkboxInput("header", "Header", TRUE),
+                                              h4("데이터 테이블"),
+                                              DT::dataTableOutput("table", width = 1000),
+                                              br(),
+                                              fluidRow(
+                                                column(2,
+                                                       actionButton("saveData", "확인된 데이터 저장")
+                                                ),
+                                                column(2, offset = 1,
+                                                       actionButton("downloadData", "데이터 다운로드")
+                                                ),
+                                                column(2, offset = 1,
+                                                       actionButton("goMenu", "분석 모듈로 이동")
+                                                )
+                                              )
+                                              
+                                      ),
+                                      tabItem(tabName = "selectvar",
+                                              verbatimTextOutput("listbox"),
+                                              uiOutput("selectColumn"),
+                                              verbatimTextOutput("listbox2"),
+                                              uiOutput("selectedColumn")
+                                      ),
+                                      tabItem(tabName = "structural",
+                                              h2("구조방정식 분석 절차"),
+                                              br(),
+                                              fluidRow(
+                                                column(10, align="center",
+                                                       img(src = "img.png",align = "center", width = 600, height = 600)
+                                                )
+                                              )
+                                              
+                                      ),
+                                      # tabItem(tabName = "result",
+                                      #         h4("Summary"),
+                                      #         verbatimTextOutput("summary"),
+                                      #         br(),
+                                      #         h4("semplot"),
+                                      #         plotOutput("Plot")
+                                      # ),
+                                      tabItem(tabName = "choo",
+                                              fluidRow(
+                                                column(6, align="center",
+                                                       br(),
+                                                       br(),
+                                                       uiOutput("Chooser"),
+                                                       br(),
+                                                       br(),
+                                                       actionButton("collist", "다변량 정규성 검증"),
+                                                       bsModal("d_result", "SEM Result", "collist",
+                                                               size="large", verbatimTextOutput("list"), downloadButton("multi_download", "Download to PDF"))
+                                                ),
+                                                column(3, align="center",
+                                                       br(),
+                                                       br(),
+                                                       box(width = "100%", height = "350px", background = "light-blue", align="center", style="padding:5px",
+                                                           h4("다변량 정규성 검정 결과 해석 방법"),
+                                                           br(),
+                                                           br(),
+                                                           h5("해당 구조방정식모델 분석 모듈은 다변량 정규분포가정을 검증하는데 있어서 Mardia의 표준화계수를 이용하고 있음."),
+                                                           br(),
+                                                           h5("Mardia의 표준화계수가 기준치를 5를 상회하는 경우 수집된 자료가 다변량 정규분포의 가정을 만족하지 못한다고 할 수 있음."),
+                                                           br(),
+                                                           h5("이러한 경우 최대우도법의 대체 모형추정방법으로 안정 최대우도법(Robust ML)을 사용하여 보다 안정되고, 유효한 표준오차의 모형적합도를 얻을 수 있음."),
+                                                           br(),
+                                                           h5("본 분석에서 Mardia의 표준화계수는 z.kurtosis값을 의미함.")
+                                                       )
+                                                )
+                                              )
+                                              
+                                              #verbatimTextOutput("list2")
+                                              #tableOutput("table2")
+                                      ),
+                                      tabItem(tabName = "frequency", 
+                                              box(title = "빈도 분석", width = "100%",
+                                                  h5("질적변수 (명목, 서열변수) 에 대해 빈도분석 실시하는 곳입니다.")
+                                              ),
+                                              selectInput("select_var1", "변수 선택", "", multiple=FALSE, selectize=TRUE),
+                                              actionButton("freq_run", "분석 실시"),
+                                              actionButton("return", "일반통계 분석모듈로 이동 하기"),
+                                              bsModal("freq", "Frequency Result", "freq_run", size="large", plotOutput("freq_plot"), verbatimTextOutput("freq_result"))
+                                      ),
+                                      tabItem(tabName = "description", 
+                                              box(title = "기술 통계 분석", width = "100%",
+                                                  h5("양적변수 (등간, 연속변수) 에 대해 기술통계치 (합계, 평균 등) 도출하는 곳입니다.")
+                                              ),
+                                              selectInput("select_var2", "변수 선택", "", multiple=TRUE, selectize=TRUE),
+                                              actionButton("static_run", "분석 실시"),
+                                              actionButton("return", "일반통계 분석모듈로 이동 하기"),
+                                              bsModal("static", "Descriptive Statistics Result", "static_run", size="large", verbatimTextOutput("static_result"))
+                                      ),
+                                      tabItem(tabName = "cross", 
+                                              box(title = "교차 분석", width = "100%",
+                                                  h5("질적변수(명목, 서열변수)간 연관관계를 분석하고 분석결과에 대한 통계적 유의성을 알아보는 곳입니다."),
+                                                  h5("향후 업데이트 예정입니다. 현재는 데이터 업로드, 구조방정식모델(SEM)분석만 가능합니다.")
+                                              ),
+                                              actionButton("return3", "일반통계 분석모듈로 이동 하기")
+                                      ),
+                                      tabItem(tabName = "correlation", 
+                                              box(title = "상관 분석", width = "100%",
+                                                  h5("질적변수(명목, 서열변수)간 연관관계를 분석하고 분석결과에 대한 통계적 유의성을 알아보는 곳입니다."),
+                                                  h5("향후 업데이트 예정입니다. 현재는 데이터 업로드, 구조방정식모델(SEM)분석만 가능합니다.")
+                                              ),
+                                              actionButton("return4", "일반통계 분석모듈로 이동 하기")
+                                      ),
+                                      tabItem(tabName = "ttest", 
+                                              box(title = "독립표본 t-test 분석", width = "100%",
+                                                  h5("질적변수에 따른 양적변수 차이 분석 (질적변수의 선택보기 2개인 경우,예) 남자&여자)"),
+                                                  h5("향후 업데이트 예정입니다. 현재는 데이터 업로드, 구조방정식모델(SEM)분석만 가능합니다.")),
+                                              actionButton("return5", "일반통계 분석모듈로 이동 하기")
+                                      ),
+                                      tabItem(tabName = "anova", 
+                                              box(title = "일원배치분산(ANOVA) 분석", width = "100%",
+                                                  h5("질적변수에 따른 양적변수 차이 분석(질적변수의 선택보기 3개이상인 경우,예) 서울&수도권&기타)"),
+                                                  h5("향후 업데이트 예정입니다. 현재는 데이터 업로드, 구조방정식모델(SEM)분석만 가능합니다.")
+                                              ),
+                                              actionButton("return6", "일반통계 분석모듈로 이동 하기")
+                                      ),
+                                      tabItem(tabName = "regression", 
+                                              box(title = "회귀 분석", width = "100%",
+                                                  h5("양적변수간 단순한 인과관계를 분석하는 곳입니다. 독립변수는 여러 개일 수 있으나 종속변수는 1개만 분석이 가능합니다. 보다 복잡한 인과관계의 경우에는 구조방정식모델을 이용하세요."),
+                                                  h5("향후 업데이트 예정입니다. 현재는 데이터 업로드, 구조방정식모델(SEM)분석만 가능합니다.")
+                                              ),
+                                              actionButton("return7", "일반통계 분석모듈로 이동 하기")
+                                      ),
+                                      # tabItem(tabName = "choo_result",
+                                      #         verbatimTextOutput("list"),
+                                      #         tableOutput("table2")
+                                      # ),
+                                      tabItem(tabName = "editequation",
+                                              
+                                              br(),
+                                              br(),
+                                              fluidRow(
+                                                column(12,
+                                                       box( width="100%", height="100%", background = "navy",
+                                                            h3("모델 설정")
+                                                       ),
+                                                       box( width="100%", height="100%", background = "blue",
+                                                            h4("모델 설정 참고사항1"),
+                                                            h6("측정모델: 관측변수와 잠재변수간의 관계를 분석합니다."),
+                                                            h6("구조모델: 잠재변수간 인과관계를 분석합니다."),
+                                                            br(),
+                                                            h6("관측변수: 설문지에서 관측(존재)하는 변수"),
+                                                            h6("잠재변수: 관측변수(들)의 공통된 특징으로 새롭게 만들어낸 요인변수"),
+                                                            h6("잔차변수: 관측변수 중 잠재변수를 구성하는데 사용되고 남은 부분을 의미 이들 간 추가적 관계설정이 최적 모델도출에 도움이 될 수 있습니다."),
+                                                            br(),
+                                                            h6("분석결과에서 다변량 정규성을 만족한 경우 최대우도법(ML) 추정치를 그렇지 않은 경우에는 Robust 결과치를 이용하세요.")
+                                                       ),
+                                                       box( width="100%", height="100%", background = "blue",
+                                                            h4("모델 설정 참고사항2"),
+                                                            h6("결과변수: 모델 설정시 하나의 식에서 왼쪽에 위치하는 변수를 의미."),
+                                                            h6("측정모델에서 잠재변수를 의미하고 구조모델에서는 내생변수를 의미."),
+                                                            br(),
+                                                            h6("원인변수: 모델 설정시 하나의 식에서 오른쪽에 위치하는 변수를 의미."),
+                                                            h6("측정모델에서 관측변수를 의미하고 구조모델에서는 외생변수를 의미."),
+                                                            br(),
+                                                            h6("외생변수: 원인이 되는 잠재변수"),
+                                                            h6("내생변수: 결과가 되는 잠재변수"),
+                                                            br(),
+                                                            h6("(잔차) (공)분산간 관계 설정: 두 변수 이름이 같으면 변수 관계설정에서 해당 변수의 분산(또는 잔차 분산)을 나타내고 다르면 두 변수 사이의 (잔차)공분산을 나타냅니다.")
+                                                       ))
+                                              ),
+                                              fluidRow(
+                                                column(2,
+                                                       textInput("lefttext","결과변수 이름 입력(공백없이)",value=""),
+                                                       br(),
+                                                       selectInput("leftvar","결과변수 선택","",multiple=TRUE,selectize=TRUE)
+                                                ),
+                                                column(3,
+                                                       wellPanel(radioButtons("operator", 
+                                                                              "변수 관계설정", 
+                                                                              choiceNames = c("[=~] : 결과변수가 원인변수에 따라 측정됨  (잠재변수 - 관측변수 관계)",
+                                                                                              "[~] :  결과변수가 원인변수에 의해 결정됨  (잠재변수 - 잠재변수 관계)",
+                                                                                              "[~~] : (잔차) (공)분산간 관계 (결과 - 원인 구분 없음)",
+                                                                                              "[~1] : 절편(측정원점) 설정",
+                                                                                              "[:=] : 임의의 값 설정",
+                                                                                              "[==] :  변수 간 제약설정(동일)",
+                                                                                              "[<] :   변수 간 제약설정(보다 작다)",
+                                                                                              "[>] :   변수 간 제약설정(보다 크다)"),
+                                                                              choiceValues=c("=~","~","~~","~1",":=","==","<",">"),
+                                                                              selected="=~")
+                                                       )
+                                                ),
+                                                column(2,
+                                                       selectInput("rightvar","원인변수 선택","",multiple=TRUE,selectize=TRUE)
+                                                ),
+                                                column(1, 
+                                                       actionButton("add","모형설정", width="100px"),
+                                                       br(),
+                                                       br(),
+                                                       actionButton("reset","초기화", width="100px")
+                                                ),
+                                                column(2,
+                                                       textAreaInput("equation","구조방정식",rows=8,width=300)
+                                                )
+                                              ),
+                                              fluidRow(
+                                                column(4,
+                                                       verbatimTextOutput("EquationText"))
+                                              ),
+                                              fluidRow(
+                                                column(12, align="center",
+                                                       actionButton("run","분석 실시", width="180px",
+                                                                    style = "background-color: #0073B7; color: white;"))
+                                              ),
+                                              bsModal("sem_result", h3("구조방정식 모델 분석 결과"), "run", size="large",
+                                                      h4("모형 분석결과(그림)"), plotOutput("Plot"), h6("표준화 계수값을 근거로 도출됨"), hr(),
+                                                      h4("모형 적합도"), h5("ML방법에 의한 적합도"), verbatimTextOutput("measure1"), h5("Robust방법에 의한 적합도"), verbatimTextOutput("measure2"),
+                                                      h5("설명력(R-square)"), verbatimTextOutput("r_square"), hr(),
+                                                      h4("계수도출"), h5("잠재변수 간 계수(표준화 계수값)"), verbatimTextOutput("para_stand1"), h5("잠재변수 간 계수(비표준화 계수값)"), verbatimTextOutput("parameter1"),
+                                                      h5("잡재변수-측정변수 간 계수(표준화 계수값)"), verbatimTextOutput("para_stand2"), h5("잠재변수-측정변수 간 계수(비표준화 계수값)"), verbatimTextOutput("parameter2"), hr(),
+                                                      h4("수정지수(최적모형 도출에 도움이 될 수 있음)"), h5("수정지수: (잔차) (공)분산 간"), verbatimTextOutput("modi1"), 
+                                                      h5("수정지수: 잠재변수-측정변수 간"), verbatimTextOutput("modi2"), h5("수정지수: 잠재변수 간"), verbatimTextOutput("modi3"), 
+                                                      h5("집중타당성 참고자료"), verbatimTextOutput("ave"), h6("alpha : 크론바하 알파,      omega : CR,      avevar : AVE"), hr(),
+                                                      h4("판별타당성 참고자료"), h5("잠재변수 간 상관관계"), verbatimTextOutput("latent_cor"), h5("잠재변수 간 상관관계 제곱"), verbatimTextOutput("latent_cor_sqr"), 
+                                                      h5("잠재변수 간 표준오차"), verbatimTextOutput("latent_std"),
+                                                      downloadButton("sem_download", "Download to PDF"))
+                                              # 
+                                              # verbatimTextOutput("EquationText"),
+                                              # selectInput("leftvar","leftvar","",multiple=TRUE,selectize=TRUE),
+                                              # textInput("lefttext","lefttext",value=""),
+                                              # wellPanel(radioButtons("operator",
+                                              #                        "operator",
+                                              #                        choices=c("=~","~","~~",":=","==","<",">"),
+                                              #                        selected="=~"),
+                                              #           a(id = "toggleHelpOp", "?Operator")
+                                              #           ),
+                                              # selectInput("rightvar","rightvar","",multiple=TRUE,selectize=TRUE),
+                                              # actionButton("add","add to equation"),
+                                              # actionButton("reset","reset the equation"),
+                                              # textAreaInput("equation","equation",rows=8,width=300),
+                                              # actionButton("run","분석 실시"),
+                                              # bsModal("sem_result", "SEM Result", "run",
+                                              #         size="large", verbatimTextOutput("summary"),
+                                              #         plotOutput("Plot"))
+                                              
+                                      )
+                                      
+                                      
+                                    )
+                                    # tabItem(tabName = "tab",
+                                    #         tabsetPanel(id = "body",
+                                    #           tabPanel("upload",
+                                    #                    fileInput("file", label = "upload data"),
+                                    #                    # Horizontal line ----
+                                    #                    tags$hr(),
+                                    #                    
+                                    #                    # Input: Checkbox if file has header ----
+                                    #                    checkboxInput("header", "Header", TRUE),
+                                    #                    h4("DataTable"),
+                                    #                    DT::dataTableOutput("table", width = 600),
+                                    #                    br(),
+                                    #                    actionButton("saveData", "확인된 데이터 저장"),
+                                    #                    actionButton("downloadData", "데이터 다운로드"),
+                                    #                    actionButton("goMenu", "분석 모듈로 이동")
+                                    #                    ),
+                                    #           tabPanel("view",
+                                    #                    h4("Summary"),
+                                    #                    verbatimTextOutput("summary"),
+                                    #                    br(),
+                                    #                    h4("semplot"),
+                                    #                    plotOutput("Plot"))
+                                    #         ),
+                                    #         h2("negative")
+                                    # )
+                                    )
+                      
+                                    ))
+
+# shinyUI(fluidPage(
+#   #load js
+#   tags$head(tags$script(src = "message-handler.js")),
+#   # App title ----
+#   titlePanel("SEM"),
+#   br(),
+#   
+#   # Sidebar layout with input and output definitions ----
+#   fluidRow(
+#     
+#     # Sidebar panel for inputs ----
+#     column(3,
+#            
+#            "sidebar",
+#            # Input: Select a file ----
+#            fileInput("file", label = "upload data"),
+#            # Horizontal line ----
+#            tags$hr(),
+#            
+#            # Input: Checkbox if file has header ----
+#            checkboxInput("header", "Header", TRUE)
+#            
+#            
+#            
+#            
+#     ),
+#     
+#     # Main panel for displaying outputs ----
+#     column(8,
+#            
+#            "mainpanel",
+#            h4("DataTable"),
+#            DT::dataTableOutput("table", width = 600),
+#            br(),
+#            
+#            "buttonlayer",
+#            fluidRow(
+#              column(2, 
+#                     actionButton("saveData", "확인된 데이터 저장")
+#              ),
+#              column(2, offset = 2,
+#                     actionButton("downloadData", "데이터 다운로드")
+#              ),
+#              column(2, offset = 2,
+#                     actionButton("goMenu", "분석 모듈로 이동")
+#              )
+#            ),
+#            br(),
+#            
+#            fluidRow(
+#              column(5,
+#                     verbatimTextOutput("listbox"),
+#                     uiOutput("selectColumn")
+#              ),
+#              column(5, offset = 2,
+#                     verbatimTextOutput("listbox2"),
+#                     uiOutput("selectedColumn")
+#              )
+#            ),
+#            
+#            
+#            
+#            # Output: Header + summary of distribution ----
+#            h4("Summary"),
+#            verbatimTextOutput("summary"),
+#            br(),
+#            
+#            h4("semplot"),
+#            plotOutput("Plot")
+#            
+#            
+#     )
+#     
+#   )
+# ))

@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1516541667944.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "DE646E5E",
+    "lastKnownWriteTime" : 1516638235,
+    "last_content_update" : 1516638235528,
+    "path" : "/srv/shiny-server/test0120/chooser.R",
+    "project_path" : "chooser.R",
+    "properties" : {
+        "cursorPosition" : "56,16",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,337 @@
+for(i in c("shinydashboard","shiny","leaflet","ggplot2","devtools","shinythemes","fmsb","plotly","dplyr","DBI","httr","DT","shinycssloaders",
+           "canvasXpress","radarchart")){
+  library(i, character.only = T)
+} 
+library(MVN)
+library(shinyBS)
+library(shinyjs)
+test1 = "일반통계 분석모듈 기초통계, 연관관계, 차이, 인과관계 분석을 위한 곳입니다."
+test2 = "현재는 데이터 업로드, 빈도분석, 기술통계분석 구조방정식모델(SEM)분석만 가능하지만 점차 업데이트 예정입니다."
+
+source("chooser.R")
+options(shiny.sanitize.errors = TRUE)
+#===== use insertUI(), removeUI()
+shinyUI(dashboardPage(skin="red",
+                      dashboardHeader(title = h5(paste0(test1,test2)),
+                                      titleWidth = 800),
+                      dashboardSidebar(
+                        collapsed = F,
+                        width = 250,
+                        sidebarMenu(useShinyjs(),id = "sidebar",
+                                    br(),
+                                    hidden(tags$div(class="header", id="haha", menuItem("", tabName = "home", icon = icon("home")))),
+                                    # menuItem("",
+                                    #          tabName = 'home',
+                                    #          icon = icon('home')
+                                    # ),
+                                    menuItem('데이터 업로드 및 저장', 
+                                             tabName = 'dtupload',
+                                             icon = icon('bar-chart')
+                                    ),
+                                    menuItem('빈도분석', 
+                                             tabName = 'frequency',
+                                             icon = icon('bar-chart')
+                                    ),
+                                    menuItem('기술통계분석', 
+                                             tabName = 'description',
+                                             icon = icon('bar-chart')
+                                    ),
+                                    menuItem('연관관계분석', 
+                                             icon = icon('bar-chart'),
+                                             hr(),
+                                             menuItem('교차분석',
+                                                      tabName = 'cross',
+                                                      icon = icon('signal')),
+                                             hr(),
+                                             menuItem('상관분석',
+                                                      tabName = 'correlation',
+                                                      icon = icon('male')),
+                                             hr()
+                                             
+                                    ),
+                                    menuItem('차이분석', 
+                                             icon = icon('map'),
+                                             hr(),
+                                             menuItem('독립표본 t-test분석',
+                                                      tabName = 'ttest',
+                                                      icon = icon('thumbs-up')),
+                                             hr(),
+                                             menuItem(HTML(paste0("일원배치분산",
+                                                                  tags$br(),
+                                                                  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(ANOVA)분석")),
+                                                      tabName = 'anova',
+                                                      icon = icon('thumbs-down')),
+                                             hr()
+                                    ),
+                                    menuItem('인과관계분석', 
+                                             icon = icon('map'),
+                                             hr(),
+                                             menuItem('회귀분석',
+                                                      tabName = 'regression',
+                                                      icon = icon('thumbs-up')),
+                                             hr(),
+                                             menuItem(HTML(paste0("구조방정식",
+                                                                  tags$br(),
+                                                                  "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;모델(SEM)분석")),
+                                                      tabName = 'structural',
+                                                      icon = icon('thumbs-down'),
+                                                      menuItem('다변량 정규성 검증', 
+                                                               tabName = 'choo',
+                                                               icon = icon('bar-chart')
+                                                      ),
+                                                      menuItem('구조방정식 모델', 
+                                                               tabName = 'editequation',
+                                                               icon = icon('bar-chart')
+                                                      )
+                                                      
+                                             ),
+                                             hr()
+                                    )
+                                    
+                                    
+                        )
+                      ),
+                      dashboardBody(tags$head(tags$script(src = "message-handler.js")),
+                                    tags$style(HTML(".sidebar-menu li a { padding : 18px 5px;}")),
+                                    
+                                    tabItems(
+                                      tabItem(tabName = 'home',
+                                              fluidRow(
+                                                column(5,
+                                                       box(title = "1", background = "maroon", width = "100%"),
+                                                       br(),
+                                                       column(4,
+                                                              box(title = "2", background = "olive", width = "100%", height = "60px")),
+                                                       column(8,
+                                                              box(title = "3", background = "yellow", width = "100%", height = "25px"),
+                                                              box(title = "3", background = "yellow", width = "100%", height = "25px"))
+                                                ),
+                                                column(5,
+                                                       box(title = "4", background = "light-blue", width = "100%")
+                                                )
+                                              )
+                                              
+                                      ),
+                                      tabItem(tabName = "dtupload",
+                                              # Input: Select a file ----
+                                              fileInput("file", label = "upload data(csv, xlsx, RDS)"),
+                                              # Horizontal line ----
+                                              tags$hr(),
+                                              
+                                              # Input: Checkbox if file has header ----
+                                              #checkboxInput("header", "Header", TRUE),
+                                              h4("DataTable"),
+                                              DT::dataTableOutput("table", width = 1000),
+                                              br(),
+                                              fluidRow(
+                                                column(2,
+                                                       actionButton("saveData", "확인된 데이터 저장")
+                                                ),
+                                                column(2, offset = 1,
+                                                       actionButton("downloadData", "데이터 다운로드")
+                                                ),
+                                                column(2, offset = 1,
+                                                       actionButton("goMenu", "분석 모듈로 이동")
+                                                )
+                                              )
+                                              
+                                      ),
+                                      tabItem(tabName = "selectvar",
+                                              verbatimTextOutput("listbox"),
+                                              uiOutput("selectColumn"),
+                                              verbatimTextOutput("listbox2"),
+                                              uiOutput("selectedColumn")
+                                      ),
+                                      # tabItem(tabName = "result",
+                                      #         h4("Summary"),
+                                      #         verbatimTextOutput("summary"),
+                                      #         br(),
+                                      #         h4("semplot"),
+                                      #         plotOutput("Plot")
+                                      # ),
+                                      tabItem(tabName = "choo",
+                                              fluidRow(
+                                                column(8, align="center",
+                                                       br(),
+                                                       br(),
+                                                       uiOutput("Chooser"),
+                                                       br(),
+                                                       br(),
+                                                       actionButton("collist", "다변량 정규성 검증"),
+                                                       bsModal("d_result", "SEM Result", "collist",
+                                                               size="large", verbatimTextOutput("list"))
+                                                )
+                                              )
+                                              
+                                              #verbatimTextOutput("list2")
+                                              #tableOutput("table2")
+                                      ),
+                                      # tabItem(tabName = "choo_result",
+                                      #         verbatimTextOutput("list"),
+                                      #         tableOutput("table2")
+                                      # ),
+                                      tabItem(tabName = "editequation",
+                                              br(),
+                                              br(),
+                                              fluidRow(
+                                                column(4,
+                                                       verbatimTextOutput("EquationText"))
+                                              ),
+                                              br(),
+                                              br(),
+                                              fluidRow(
+                                                column(2,
+                                                       selectInput("leftvar","왼쪽변수선택","",multiple=TRUE,selectize=TRUE),
+                                                       textInput("lefttext","잠재변수입력",value="")
+                                                ),
+                                                column(2,
+                                                       wellPanel(radioButtons("operator",
+                                                                              "연산자선택",
+                                                                              choices=c("=~","~","~~",":=","==","<",">"),
+                                                                              selected="=~")
+                                                       )
+                                                ),
+                                                column(2,
+                                                       selectInput("rightvar","오른쪽변수선택","",multiple=TRUE,selectize=TRUE)
+                                                ),
+                                                column(2, 
+                                                       actionButton("add","구조방정식에 추가"),
+                                                       br(),
+                                                       br(),
+                                                       actionButton("reset","구조방정식 초기화")
+                                                ),
+                                                column(2,
+                                                       textAreaInput("equation","구조방정식",rows=8,width=300),
+                                                       actionButton("run","분석 실시")
+                                                )
+                                              ),
+                                              bsModal("sem_result", "SEM Result", "run",
+                                                      size="large", verbatimTextOutput("summary"),
+                                                      plotOutput("Plot"))
+                                              # 
+                                              # verbatimTextOutput("EquationText"),
+                                              # selectInput("leftvar","leftvar","",multiple=TRUE,selectize=TRUE),
+                                              # textInput("lefttext","lefttext",value=""),
+                                              # wellPanel(radioButtons("operator",
+                                              #                        "operator",
+                                              #                        choices=c("=~","~","~~",":=","==","<",">"),
+                                              #                        selected="=~"),
+                                              #           a(id = "toggleHelpOp", "?Operator")
+                                              #           ),
+                                              # selectInput("rightvar","rightvar","",multiple=TRUE,selectize=TRUE),
+                                              # actionButton("add","add to equation"),
+                                              # actionButton("reset","reset the equation"),
+                                              # textAreaInput("equation","equation",rows=8,width=300),
+                                              # actionButton("run","분석 실시"),
+                                              # bsModal("sem_result", "SEM Result", "run",
+                                              #         size="large", verbatimTextOutput("summary"),
+                                              #         plotOutput("Plot"))
+                                              
+                                      )
+                                      
+                                      
+                                    )
+                                    # tabItem(tabName = "tab",
+                                    #         tabsetPanel(id = "body",
+                                    #           tabPanel("upload",
+                                    #                    fileInput("file", label = "upload data"),
+                                    #                    # Horizontal line ----
+                                    #                    tags$hr(),
+                                    #                    
+                                    #                    # Input: Checkbox if file has header ----
+                                    #                    checkboxInput("header", "Header", TRUE),
+                                    #                    h4("DataTable"),
+                                    #                    DT::dataTableOutput("table", width = 600),
+                                    #                    br(),
+                                    #                    actionButton("saveData", "확인된 데이터 저장"),
+                                    #                    actionButton("downloadData", "데이터 다운로드"),
+                                    #                    actionButton("goMenu", "분석 모듈로 이동")
+                                    #                    ),
+                                    #           tabPanel("view",
+                                    #                    h4("Summary"),
+                                    #                    verbatimTextOutput("summary"),
+                                    #                    br(),
+                                    #                    h4("semplot"),
+                                    #                    plotOutput("Plot"))
+                                    #         ),
+                                    #         h2("negative")
+                                    # )
+                      )
+                      
+))
+
+# shinyUI(fluidPage(
+#   #load js
+#   tags$head(tags$script(src = "message-handler.js")),
+#   # App title ----
+#   titlePanel("SEM"),
+#   br(),
+#   
+#   # Sidebar layout with input and output definitions ----
+#   fluidRow(
+#     
+#     # Sidebar panel for inputs ----
+#     column(3,
+#            
+#            "sidebar",
+#            # Input: Select a file ----
+#            fileInput("file", label = "upload data"),
+#            # Horizontal line ----
+#            tags$hr(),
+#            
+#            # Input: Checkbox if file has header ----
+#            checkboxInput("header", "Header", TRUE)
+#            
+#            
+#            
+#            
+#     ),
+#     
+#     # Main panel for displaying outputs ----
+#     column(8,
+#            
+#            "mainpanel",
+#            h4("DataTable"),
+#            DT::dataTableOutput("table", width = 600),
+#            br(),
+#            
+#            "buttonlayer",
+#            fluidRow(
+#              column(2, 
+#                     actionButton("saveData", "확인된 데이터 저장")
+#              ),
+#              column(2, offset = 2,
+#                     actionButton("downloadData", "데이터 다운로드")
+#              ),
+#              column(2, offset = 2,
+#                     actionButton("goMenu", "분석 모듈로 이동")
+#              )
+#            ),
+#            br(),
+#            
+#            fluidRow(
+#              column(5,
+#                     verbatimTextOutput("listbox"),
+#                     uiOutput("selectColumn")
+#              ),
+#              column(5, offset = 2,
+#                     verbatimTextOutput("listbox2"),
+#                     uiOutput("selectedColumn")
+#              )
+#            ),
+#            
+#            
+#            
+#            # Output: Header + summary of distribution ----
+#            h4("Summary"),
+#            verbatimTextOutput("summary"),
+#            br(),
+#            
+#            h4("semplot"),
+#            plotOutput("Plot")
+#            
+#            
+#     )
+#     
+#   )
+# ))

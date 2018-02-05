@@ -1,0 +1,337 @@
+library(shiny)
+library(shinyAce)
+library(psych)
+library(lavaan)
+library(semPlot)
+library(ggplot2)
+library(DT)
+library(MVN)
+library(shinyBS)
+
+#library(shinyjs)
+options(shiny.sanitize.errors = TRUE)
+source("chooser.R")
+
+#load("C:/Users/Ronaldo/AtomWorks/static/통계사이트/HMR.RData")
+#colnames(Dataset)
+#rownames(USArrests)
+#shiny::runGitHub("shiny-examples", "rstudio", subdir = "009-upload")
+#shiny::runGitHub("shiny-js-examples", "jcheng5", subdir="input")
+
+# model_measure <-
+#   'TANGI =~ sq_1_1 + sq_1_2 +  sq_1_3 + sq_1_4
+# ASSUR_EMPAT_RESPON =~ sq_2_1 + sq_2_2 + sq_2_3 + sq_2_4 +
+# sq_3_1 + sq_3_2 + sq_3_3 +
+# sq_4_1 + sq_4_2 + sq_4_3
+# RELIA =~ sq_5_1 + sq_5_2 + sq_5_3
+# 
+# FV =~ fv1 + fv2 + fv3 + fv4 # without 
+# EV =~ ev1 + ev2 + ev3 + ev4 # without 
+# 
+# SAT=~ sat1 + sat2 + sat3'
+# 
+# fit_measure <- lavaan::sem(model = model_measure, data = Dataset, estimator="MLM", test = "Satorra-Bentler", mimic = "EQS")
+# 
+# # 분석결과 표시
+# summary(fit_measure, standardized=TRUE, fit.measures=TRUE, rsquare=TRUE)
+
+# 그래프 그리기
+#semPaths(fit_measure, intercept = FALSE, whatLabel = "est", residuals = FALSE, exoCov = FALSE)
+
+
+#Dataset_MVN <- subset(Dataset,select=c("sq_1_1", "sq_1_2", "sq_1_3", "sq_1_4", "sq_2_1", "sq_2_2", "sq_2_3", "sq_2_4", "sq_3_1", "sq_3_2", "sq_3_3", "sq_4_1", "sq_4_2", "sq_4_3", "sq_5_1", "sq_5_2", "sq_5_3", "fv1", "fv2", "fv3", "fv4", "ev1", "ev2", "ev3", "ev4", "sat1", "sat2", "sat3"))
+#Dataset_MVN <- subset(Dataset,select=c("sq_1_1", "sq_1_2", "sq_1_3"))
+# 다변량 정규성 검정
+#result1 <- mardiaTest(Dataset_MVN, qqplot = FALSE) # z.kurtosis가 EQS의 표준화 Mardia와 같은 값
+#result1
+
+shinyServer(function(input, output, session) {
+  
+  #putmsg
+  putmsg=function(msg="test message"){
+    session$sendCustomMessage(type = 'testmessage',message = list( msg)) 
+  }
+  #확장자 추출.
+  file2ext=function(filename){
+    namelist=unlist(strsplit(filename,".",fixed=TRUE))
+    result=namelist[length(namelist)]
+    result=tolower(result)
+    if((result=="csv")|(result=="xlsx")|(result=="rds")) return(result)
+    else return(NULL)
+  }
+  
+  #경로 
+  file2newname=function(file){
+    mypath=unlist(strsplit(file$datapath,"/"))
+    length(mypath)
+    temp=mypath[1]
+    for(i in 2:(length(mypath)-1)) temp=paste(temp,mypath[i],sep="/")
+    result=paste(temp,"/","test.",file2ext(file$name),sep="")
+    result
+  }
+  
+  #csv,rds
+  my_readfile=function(file){
+    ext=file2ext(file$name)
+    result=NULL
+    if(is.null(ext)) {
+      session$sendCustomMessage(type = 'testmessage',
+                                message = list( 'Only file with xlsx or csv or RDS format is supported.'))
+    } else if(ext=="csv") {
+      try(result<-read.csv(file$datapath,header=TRUE,stringsAsFactors = FALSE),silent=TRUE)
+      if(is.null(result)) {
+        try(result<-read.csv(file$datapath,header=TRUE,fileEncoding="euc-kr",stringsAsFactors = FALSE),silent=TRUE)
+        if(is.null(result)) session$sendCustomMessage(type = 'testmessage',
+                                                      message = list( 'File read error : please check file encoding')) 
+      }
+    }  else if(ext=="rds"){
+      result=readRDS(file$datapath)
+      result=data.frame(result)
+    } else{
+      newname=file2newname(file)
+      file.copy(file$datapath,newname)
+      result=read_excel(newname)
+      if(is.null(result)) session$sendCustomMessage(type = 'testmessage',
+                                                    message = list( 'File read error : please check file encoding')) 
+    } 
+    result
+  }
+  
+  #
+  userFile <-reactive({
+    if(is.null(input$file)) {
+      return(NULL)
+      #putmsg("먼저 file을 업로드하세요 !")   
+    }
+    else df<-my_readfile(input$file)
+    df
+  })
+  
+  userFile2 <- reactive({
+    inFile <- input$file
+    if (is.null(inFile)) 
+      return(NULL)
+    df <- read.csv(input$file$datapath,
+                   header = input$header,
+                   sep = ",")
+    
+  })
+  
+  output$table <- DT::renderDataTable ({
+    DT::datatable(userFile(), options = list(scrollX = TRUE, scrollY = "500px"))
+  })
+  
+  #button
+  observeEvent(input$saveData, {
+    putmsg("저장이 완료되었습니다.")
+    #updateTabItems(session, "sidebar", "home")
+  })
+  
+  observeEvent(input$goMenu, {
+    updateTabItems(session, "sidebar", "home")
+  })
+  
+  output$selectColumn <- renderUI({
+    selectInput("variables", "변수 목록", choices = colnames(userFile()), multiple = TRUE, selectize=FALSE)
+  })
+  
+  output$listbox <- renderPrint({
+    input$variables
+  })
+  
+  output$selectedColumn <- renderUI({
+    selectInput("variables2", "선택 변수", choices = colnames(userFile()), multiple = TRUE, selectize=FALSE)
+  })
+  
+  output$listbox2 <- renderPrint({
+    input$variables2
+  })
+  
+  
+  model_measure <- reactive({
+    model <- input$equation
+    model
+  })
+  # model_measure <- ({
+  #   'TANGI =~ sq_1_1 + sq_1_2 +  sq_1_3 + sq_1_4
+  #   ASSUR_EMPAT_RESPON =~ sq_2_1 + sq_2_2 + sq_2_3 + sq_2_4 + 
+  #   sq_3_1 + sq_3_2 + sq_3_3 +
+  #   sq_4_1 + sq_4_2 + sq_4_3
+  #   RELIA =~ sq_5_1 + sq_5_2 + sq_5_3
+  #   
+  #   FV =~ fv1 + fv2 + fv3 + fv4 # without 
+  #   EV =~ ev1 + ev2 + ev3 + ev4 # without 
+  #   
+  #   SAT=~ sat1 + sat2 + sat3'
+  # })
+  
+  
+  fit_measure <- reactive({
+    inFile <- input$file
+    if (is.null(inFile)) 
+      return(NULL)
+    model_measure <- model_measure()
+    lavaan::sem(model = model_measure, data = userFile(), estimator="MLM", test = "Satorra-Bentler", mimic = "EQS")
+  }) 
+  
+  # 측정모형 구축(new): 잠재변수는 모두 대문자
+  # 서비스 품질(5요인) - 기능적 가치, 감정적 가치 - 만족도
+  
+  # output$table <- DT::renderDataTable({
+  #   DT::datatable(Dataset, options = list(lengthMenu = c(5, 30, 50), pageLength = 5))
+  # })
+  
+  
+  output$summary <- renderPrint({
+    summary(fit_measure(), standardized=TRUE, fit.measures=TRUE, rsquare=TRUE)
+  })
+  
+  output$Plot <- renderPlot({
+    print(semPaths(fit_measure(), intercept = FALSE, whatLabel = "est", residuals = FALSE, exoCov = FALSE))
+  })
+  
+  output$summary2 <- renderPrint({
+    summary(fit_measure(), standardized=TRUE, fit.measures=TRUE, rsquare=TRUE)
+  })
+  
+  output$Plot2 <- renderPlot({
+    print(semPaths(fit_measure(), intercept = FALSE, whatLabel = "est", residuals = FALSE, exoCov = FALSE))
+  })
+  
+  
+  output$Chooser=renderUI({
+    mydf = userFile()
+    size = min(ncol(mydf), 20)
+    
+    chooserInput("mychooser", "All Columns", "Selected Columns",
+                 colnames(mydf), c(), size = size, multiple = TRUE)
+    
+    
+  })
+  
+  # observeEvent(input$collist, {
+  #   toggle('text_div')
+  #   output$list <- renderPrint({
+  #     print(collist())
+  #   })
+  # })
+  
+  d_result <- reactive({
+    list <- input$mychooser$right
+    mydf = userFile()
+    if(length(list)<2)
+      return("변수를 2개 이상 선택하세요.")
+    Dataset_MVN <- subset(mydf,select=list)
+    result1 <- mardiaTest(Dataset_MVN, qqplot = FALSE)
+    result1
+  })
+  collist2 <- reactive({
+    list <- input$mychooser$right
+    mydf = userFile()
+    if(length(list)==0)
+      return(NULL)
+    Dataset_MVN <- subset(mydf,select=list)
+    Dataset_MVN
+  })
+  output$list <- renderPrint({
+    #print(input$mychooser$right)
+    print(d_result())
+    #result1 <- mardiaTest(Dataset_MVN, qqplot = FALSE) # z.kurtosis가 EQS의 표준화 Mardia와 같은 값
+    #print(result1)
+  })
+  output$list2 <- renderPrint({
+    print(input$mychooser$right)
+    print(d_result())
+    #result1 <- mardiaTest(Dataset_MVN, qqplot = FALSE) # z.kurtosis가 EQS의 표준화 Mardia와 같은 값
+    #print(result1)
+  })
+  output$table2 <- renderTable({
+    collist2()
+  })
+  
+  plustext=function(x){
+    if(is.null(x)) result=""
+    if(length(x)>0) result=x[1]
+    if(length(x)>1) for(i in 2:length(x)) result=paste(result,x[i],sep="+")
+    result
+  }
+  
+  #방정식
+  EqText=reactive({
+    temp=""
+    if(input$lefttext!="") temp=input$lefttext
+    else temp=plustext(input$leftvar)
+    if((temp=="") & (length(input$rightvar)==0)) result<-""
+    else{
+      result=paste(temp,input$operator, plustext(input$rightvar))
+    }
+    result
+  })
+  
+  observe({
+    
+    df=userFile()
+    
+    vars=c("Select..."="",colnames(df))
+    
+    updateSelectInput(session,"leftvar",choices=c(vars,"indirect effect","total effect"))
+    updateSelectInput(session,"rightvar",choices=c(vars,"1"))
+  })
+  
+  #add_btn
+  observeEvent(input$add, {
+    if(input$equation=="") updateTextInput(session,"equation",value=EqText()) 
+    else updateTextInput(session,"equation",value=paste(input$equation,EqText(),sep="\n"))
+  })
+  
+  extractLatentVar=function(){
+    newvar=c()
+    if(input$equation!=""){
+      equations=unlist(strsplit(input$equation,"\n",fixed=TRUE))
+      for(i in 1:length(equations)){
+        if(grepl("=~",equations[i])==TRUE) {
+          temp=unlist(strsplit(equations[i],"=~",fixed=TRUE))[1]
+          newvar=c(newvar,temp)
+          
+        }   
+      }
+    }
+    newvar
+  }
+  
+  observeEvent(input$equation,{
+    
+    newvar=c() 
+    if(input$equation!="") newvar=extractLatentVar() 
+    
+    #cat("\nnewvar=",newvar)
+    newchoices=c("Select..."="",colnames(userFile()),newvar)
+    #cat("\nnewchoices=",newchoices)
+    updateSelectInput(session,"leftvar",choices=newchoices,selected="")
+    updateSelectInput(session,"rightvar",choices=newchoices,selected="")
+    # updateSelectInput(session,"indepvar",choices=newchoices)
+    # updateSelectInput(session,"resvar",choices=newchoices)
+    # updateSelectInput(session,"mediator",choices=newchoices)
+    # updateSelectInput(session,"group",choices=newchoices)
+    updateTextInput(session,"lefttext",value="")
+    
+  })
+  
+  observeEvent(input$reset, {
+    updateTextInput(session,"equation",value="")
+    updateSelectInput(session,"leftvar",selected="")
+    updateSelectInput(session,"rightvar",selected="")
+  })
+  
+  output$EquationText=renderPrint({
+    
+    if(EqText()=="") {
+      cat("변수와 연산자를 선택하여 구조방정식을 만드세요!")
+    }  
+    else cat(EqText())
+  })
+  
+  
+})
+
+

@@ -1,0 +1,9 @@
+{
+    "path" : "/srv/shiny-server/test0120",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

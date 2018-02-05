@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1516541626105.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "584869714",
+    "id" : "2D15F007",
+    "lastKnownWriteTime" : 1516541622,
+    "last_content_update" : 1516541622,
+    "path" : "/srv/shiny-server/test0120/app.R",
+    "project_path" : "app.R",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
